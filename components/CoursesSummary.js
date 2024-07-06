@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import CoursesList from './CoursesList'
 
 export default function CoursesSummary( { periodName, courses }) {
 
