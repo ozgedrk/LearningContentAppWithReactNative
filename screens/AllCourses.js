@@ -5,9 +5,9 @@ import { CoursesContext } from '../store/CoursesContex';
 
 export default function AllCourses() {
 
-  const coursesContext = useContext(CoursesContext)
+  const coursesContext = useContext(CoursesContext);
 
-  return <Courses courses={coursesContext.courses} coursesPeriod="All" />;
+  return <Courses courses={coursesContext.courses} coursesPeriod="All" nullText="Ur Not Attended To Any Course" />;
 }
 
 const styles = StyleSheet.create({});

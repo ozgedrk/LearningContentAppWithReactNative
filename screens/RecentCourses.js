@@ -15,7 +15,7 @@ export default function RecentCourses() {
     return course.date >= dateLastWeek && course.date < today;
   })
 
-  return <Courses courses={recentCourses} coursesPeriod="Last One Week" />;
+  return <Courses courses={recentCourses} coursesPeriod="Last One Week" nullText="Ur Not Attended To Any Course Recentlty" />;
 
 }
 

@@ -1,9 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import React, { useLayoutEffect } from 'react';
+import React, { useContext, useLayoutEffect } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
+import { CoursesContext } from '../store/CoursesContex';
+import CourseForm from '../components/CourseForm';
 
 export default function ManageCourse({route, navigation}) {
 
+  
+  const coursesContext = useContext(CoursesContext)
   const courseId = route.params?.courseId
 
   let isEditing = false;
@@ -19,14 +23,34 @@ export default function ManageCourse({route, navigation}) {
   },[navigation,isEditing]);
 
   function deleteCourse(){
+    coursesContext.deleteCourse(courseId);
     navigation.goBack();
   }
   function cancelHandler(){
     navigation.goBack();
   }
 
+  function addOrUpdateHandler(){
+    if (isEditing) {
+      coursesContext.updateCourse(courseId,{
+        description:'Updated Course',
+        amount: 169,
+        date: new Date(),
+      });
+    }
+    else {
+      coursesContext.addCourse({
+        description:'Added Course',
+        amount: 169,
+        date: new Date(),
+      });
+    }
+    navigation.goBack();
+  }
+
   return (
     <View style={styles.container} >
+      <CourseForm />
         <View style={styles.buttons}>
           <Pressable
           onPress={cancelHandler}>
@@ -36,7 +60,7 @@ export default function ManageCourse({route, navigation}) {
               </Text>
             </View>
           </Pressable>
-          <Pressable>
+          <Pressable onPress={addOrUpdateHandler} >
             <View style={styles.addOrDelete}>
               <Text style={styles.addOrDeleteText}>
                 {isEditing ? 'Update' : 'Add'}
