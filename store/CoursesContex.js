@@ -62,6 +62,7 @@ export const CoursesContext =  createContext({
     courses:[],
     addCourse:({description, amount, date})=>{},
     deleteCourse:(id)=>{},
+    setCourse: (courses) => {},
     updateCourse:(id,{description, amount, date})=>{},
 });
 
@@ -69,10 +70,15 @@ function coursesReducer(state, action){
     switch (action.type)
     {
         case 'ADD':
-            const id = new Date().toString() + Math.random().toString()
-            return [{...action.payload,id:id},...state];
+            // const id = new Date().toString() + Math.random().toString()
+            // return [{...action.payload,id:id},...state];
+            return [action.payload, ...state];
+
         case 'DELETE':
-            return state.filter((course)=>course.id !== action.payload)
+            return state.filter((course)=>course.id !== action.payload);
+        case 'SET' :
+              const reversedData = action.payload.reverse();
+              return reversedData;
         case 'UPDATE':
            const updatableCourseIndex = state.findIndex(
             (course) => course.id === action.payload.id
@@ -89,24 +95,30 @@ function coursesReducer(state, action){
 
 function CoursesContextProvider( {children} ){
 
-    const [coursesState, dispatch] = useReducer(coursesReducer, COURSES)
+    const [coursesState, dispatch] = useReducer(coursesReducer, [])
     
     function addCourse(courseData){
-        dispatch({type:'ADD', payload:courseData})
+        dispatch({type:'ADD', payload:courseData});
+    }
+
+    function setCourse(courses){
+        dispatch({type:'SET', payload: courses});
     }
 
     function deleteCourse(id){
-        dispatch({type:'DELETE', payload:id})
-    }
+      dispatch({type:'DELETE', payload:id});
+  }
+    
 
     function updateCourse(id,courseData){
-        dispatch({type:'UPDATE', payload:{id:id,data:courseData}})
+        dispatch({type:'UPDATE', payload:{id:id,data:courseData}});
     }
 
     const value ={
         courses:coursesState,
         addCourse:addCourse,
         deleteCourse:deleteCourse,
+        setCourse:setCourse,
         updateCourse:updateCourse
     }
     return (

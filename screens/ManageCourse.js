@@ -1,16 +1,25 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import React, { useContext, useLayoutEffect } from 'react';
+import React, { useContext, useLayoutEffect, useState } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
 import { CoursesContext } from '../store/CoursesContex';
 import CourseForm from '../components/CourseForm';
+import { deleteCourseHttp, storeCourse, updateCourse } from '../helper/Http';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+
 
 export default function ManageCourse({route, navigation}) {
 
-  
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [error, setError] = useState()
+
   const coursesContext = useContext(CoursesContext)
   const courseId = route.params?.courseId
 
   let isEditing = false;
+
+  const selectedCourse = coursesContext.courses.find((course)=>course.id === courseId);
 
   if (courseId) {
     isEditing = true;
@@ -22,52 +31,64 @@ export default function ManageCourse({route, navigation}) {
     });
   },[navigation,isEditing]);
 
-  function deleteCourse(){
-    coursesContext.deleteCourse(courseId);
-    navigation.goBack();
+  async function deleteCourse(){
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      coursesContext.deleteCourse(courseId);
+      await deleteCourseHttp(courseId)
+      navigation.goBack();
+    } catch (error) {
+      setError('Couldnt Delete The Course!!');
+      setIsSubmitting(false);
+    }
   }
+
+  if(error && !isSubmitting){
+    return <ErrorText message={error} />
+  }
+
+
   function cancelHandler(){
     navigation.goBack();
   }
 
-  function addOrUpdateHandler(){
-    if (isEditing) {
-      coursesContext.updateCourse(courseId,{
-        description:'Updated Course',
-        amount: 169,
-        date: new Date(),
-      });
+  async function addOrUpdateHandler(courseData){
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      if (isEditing) {
+        coursesContext.updateCourse(courseId,courseData);
+        await updateCourse(courseId,courseData);
+      }
+      else {
+      const id =  await storeCourse(courseData);
+        coursesContext.addCourse({...courseData, id:id});
+      }
+      navigation.goBack();
+    } catch (error) {
+      setError('Theres a Problem with Adding Or Updating!!');
+      setIsSubmitting(false);
     }
-    else {
-      coursesContext.addCourse({
-        description:'Added Course',
-        amount: 169,
-        date: new Date(),
-      });
-    }
-    navigation.goBack();
+ 
   }
+ 
+  if (isSubmitting) {
+    return <LoadingSpinner />
+  }
+
 
   return (
     <View style={styles.container} >
-      <CourseForm />
-        <View style={styles.buttons}>
-          <Pressable
-          onPress={cancelHandler}>
-            <View style={styles.cancel}>
-              <Text style={styles.cancelText}>
-                Cancel
-              </Text>
-            </View>
-          </Pressable>
-          <Pressable onPress={addOrUpdateHandler} >
-            <View style={styles.addOrDelete}>
-              <Text style={styles.addOrDeleteText}>
-                {isEditing ? 'Update' : 'Add'}
-              </Text>
-            </View>
-          </Pressable>
-        </View>
+      <CourseForm 
+      buttonLabel= {isEditing ? 'Update' : 'Add'}
+      onSubmit={addOrUpdateHandler}
+      cancelHandler={cancelHandler}
+      defaultValues={selectedCourse}
+      />
+
       {isEditing && (
         <View style={styles.deleteContainer}>
           <FontAwesome 
@@ -93,30 +114,5 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     marginTop: 16,
   },
-  buttons:{
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  cancel:{
-    backgroundColor: 'red',
-    minWidth: 120,
-    marginRight: 10,
-    padding: 8,
-    alignItems:'center',
-    borderRadius: 10,
-  },
-  cancelText:{
-    color: 'white'
-  },
-  addOrDelete:{
-    backgroundColor: 'lightblue',
-    minWidth: 120,
-    marginRight: 10,
-    padding: 8,
-    alignItems:'center',
-    borderRadius: 10,
-  },
-  addOrDeleteText:{
-    color: 'white'
-  },
+ 
 });
